@@ -15,8 +15,7 @@ class Game (@BeanProperty @JsonProperty("player1Id") val player1Id: String,
             @BeanProperty @JsonProperty("player2Id") val player2Id: String,
             @BeanProperty @JsonProperty("state") val state: GameState = new GameState(null, false),
             @BeanProperty @JsonProperty("scores") var scores: Array[Int] = Array(0, 0, 0, 0, 0, 0, 0, 0),
-            @BeanProperty @JsonProperty("points") var points: Array[Array[Int]] =
-              Array(Array(0, 0, 0), Array(0, 0, 0), Array(0, 0, 0))) {
+            @BeanProperty @JsonProperty("points") var points: Array[Int] = Array(0, 0, 0, 0, 0, 0, 0, 0, 0)) {
 
   def this(@ObjectId @Id id: String) {
     this(null, null, null)
@@ -41,10 +40,28 @@ class Game (@BeanProperty @JsonProperty("player1Id") val player1Id: String,
 
     val winner: Int = hasWinner(scores)
     if (winner != 0) {
-      state.setGameOver(true)
-      state.setWinnerId(if (winner == 1) player1Id else player2Id)
+      state.setWinnerId(getWinnerId(winner, player1Id, player2Id))
+      updateLeaderboard(state.getWinnerId, getLoserId(winner, player1Id, player2Id))
     }
+
+    if (hasDrawn(points) || winner != 0) {
+      state.setGameOver(true)
+    }
+
     Game.updateById(id, this)
+  }
+
+  def updateLeaderboard(winnerId: String, loserId: String) {
+    LeaderBoard.findAndModifyOrCreate(winnerId, 1)
+    LeaderBoard.findAndModifyOrCreate(loserId, -1)
+  }
+
+  def getWinnerId(winner: Int, player1: String, player2: String): String = {
+    if (winner == 1) player1Id else player2Id
+  }
+
+  def getLoserId(winner: Int, player1: String, player2: String): String = {
+    if (winner == 1) player2Id else player1Id
   }
 
   def hasWinner(scores: Array[Int]): Int = {
@@ -55,11 +72,15 @@ class Game (@BeanProperty @JsonProperty("player1Id") val player1Id: String,
     result
   }
 
+  def hasDrawn(points: Array[Int]): Boolean = {
+    points.indexOf(0) < 0
+  }
+
   def makeMove(move: Move, scores: Array[Int]) {
-    if (points(move.x)(move.y) != 0) {
+    if (points(move.x * 3 + move.y) != 0) {
       throw new DuplicatedMoveException(move)
     }
-    points(move.x)(move.y) = 1
+    points(move.x * 3 + move.y) = 1
 
     val point: Int = { if (turn.compareTo(player1Id) == 0) 1 else -1 }
     scores(move.x) += point

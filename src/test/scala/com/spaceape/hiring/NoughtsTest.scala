@@ -28,8 +28,8 @@ class NoughtsTest extends JUnitSuite with Matchers {
 
   def initGame(player1Id: String, player2Id: String) = {
     val response = Unirest.post(baseUrl)
-      .queryString("player1Id", "1")
-      .queryString("player2Id", "2")
+      .queryString("player1Id", player1Id)
+      .queryString("player2Id", player2Id)
       .asString()
 
     if(response.getStatus != Status.OK.getStatusCode) {
@@ -77,4 +77,38 @@ class NoughtsTest extends JUnitSuite with Matchers {
     getState(gameId).getWinnerId shouldBe state.getWinnerId
     getState(gameId).getGameOver shouldBe state.getGameOver
 	}
+
+  @Test
+  def testDraw {
+    val gameId = initGame("3", "4")
+    runMoves(gameId, Seq(
+      Move("3", 0, 0),
+      Move("4", 1, 0),
+      Move("3", 2, 0),
+      Move("4", 2, 1),
+      Move("3", 0, 1),
+      Move("4", 0, 2),
+      Move("3", 1, 1),
+      Move("4", 2, 2),
+      Move("3", 1, 2)))
+
+    val state: GameState = new GameState(null, true)
+    getState(gameId).getWinnerId shouldBe state.getWinnerId
+    getState(gameId).getGameOver shouldBe state.getGameOver
+  }
+
+  @Test
+  def testPlayInProgress {
+    val gameId = initGame("5", "6")
+    runMoves(gameId, Seq(
+      Move("5", 0, 0),
+      Move("6", 1, 0),
+      Move("5", 0, 1),
+      Move("6", 1, 1)))
+
+    val state: GameState = new GameState(null, false)
+    getState(gameId).getWinnerId shouldBe state.getWinnerId
+    getState(gameId).getGameOver shouldBe state.getGameOver
+  }
+
 }
