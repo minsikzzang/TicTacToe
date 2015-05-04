@@ -64,6 +64,11 @@
             <version>${scalatest.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>net.vz.mongodb.jackson</groupId>
+            <artifactId>mongo-jackson-mapper</artifactId>
+            <version>1.4.2</version>
+        </dependency>
     </dependencies>
 
     <build>

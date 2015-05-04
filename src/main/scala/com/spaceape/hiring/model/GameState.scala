@@ -1,3 +1,7 @@
 package com.spaceape.hiring.model
 
-case class GameState(winnerId: Option[String], gameOver: Boolean)
+import com.fasterxml.jackson.annotation.JsonProperty
+import scala.beans.BeanProperty
+
+case class GameState(@BeanProperty @JsonProperty val winnerId: Option[String],
+                     @BeanProperty @JsonProperty val gameOver: Boolean)
