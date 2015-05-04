@@ -1,6 +1,7 @@
 package com.spaceape.hiring
 
-import com.mongodb.{DB, Mongo}
+import com.mongodb.Mongo
+import com.spaceape.hiring.healthcheck.MongoHealthCheck
 import io.dropwizard.Application
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment

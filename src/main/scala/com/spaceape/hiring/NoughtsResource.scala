@@ -3,11 +3,12 @@ package com.spaceape.hiring
 import com.mongodb.DB
 import javax.ws.rs._
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 import javax.ws.rs.core.Response.Status
 
+import com.spaceape.hiring.exception._
 import com.spaceape.hiring.model.{Game, GameState, Move}
-import net.vz.mongodb.jackson.{WriteResult, JacksonDBCollection}
-;
+import net.vz.mongodb.jackson.WriteResult
 
 @Path("/game")
 @Produces(Array(MediaType.APPLICATION_JSON))
@@ -29,13 +30,45 @@ class NoughtsResource(db: DB) {
   @GET
   @Path("/{gameId}")
   def getGame(@PathParam("gameId") gameId: String): GameState = {
-    GameState(None, false)
-  }
+    try {
+      val game = Game.findById(gameId).orNull
+      if (game == null) {
+        throw new WebApplicationException(Status.NOT_FOUND)
+      }
 
+      game.getState
+    } catch {
+      case argumentException: IllegalArgumentException => throw new WebApplicationException(Status.NOT_FOUND)
+    }
+  }
 
   @PUT
   @Path("/{gameId}")
-  def makeMove(@PathParam("gameId") gameId: String, move: Move) {
-    throw new WebApplicationException(Status.NOT_IMPLEMENTED)
+  def makeMove(@PathParam("gameId") gameId: String, move: Move): Response = {
+    println(move.playerId + ", " + move.x + ", "  + move.y)
+
+    try {
+      val game = Game.findById(gameId).orNull
+      if (game == null) {
+        throw new WebApplicationException(Status.NOT_FOUND)
+      }
+
+      game.addMove(move)
+      Response.status(Status.ACCEPTED).build
+    } catch {
+      case argumentException: IllegalArgumentException => throw new WebApplicationException(Status.NOT_FOUND)
+      case e: InvalidPlayerTurnException =>
+        Response.status(422)
+          .entity("{\"error\": {\"code\": " + e.getCode + ", \"message\": \"" + e.getMessage + "\"}}")
+          .build
+      case e: GameHasFinishedException =>
+        Response.status(422)
+          .entity("{\"error\": {\"code\": " + e.getCode + ", \"message\": \"" + e.getMessage + "\"}}")
+          .build
+      case e: DuplicatedMoveException =>
+        Response.status(422)
+          .entity("{\"error\": {\"code\": " + e.getCode + ", \"message\": \"" + e.getMessage + "\"}}")
+          .build
+    }
   }
 }

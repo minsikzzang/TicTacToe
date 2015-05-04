@@ -3,5 +3,10 @@ package com.spaceape.hiring.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import scala.beans.BeanProperty
 
-case class GameState(@BeanProperty @JsonProperty val winnerId: Option[String],
-                     @BeanProperty @JsonProperty val gameOver: Boolean)
+
+class GameState (@BeanProperty @JsonProperty("winnerId") var winnerId: String,
+                 @BeanProperty @JsonProperty("gameOver") var gameOver: Boolean) {
+  def this() {
+    this(null, false)
+  }
+}

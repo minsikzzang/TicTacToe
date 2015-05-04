@@ -36,7 +36,7 @@ class NoughtsTest extends JUnitSuite with Matchers {
       throw new RuntimeException(s"${response.getStatus} when creating game: ${response.getBody}")
     }
 
-    objectMapper.readValue(response.getBody, classOf[String])
+    response.getBody
   }
 
   def runMoves(gameId: String, moves: Seq[Move]) = {
@@ -59,13 +59,13 @@ class NoughtsTest extends JUnitSuite with Matchers {
       throw new RuntimeException(s"${response.getStatus} when getting state: ${response.getBody}")
     }
 
+    println(response.getBody)
     objectMapper.readValue(response.getBody, classOf[GameState])
   }
 
 	@Test
 	def testPlayer1Win {
     val gameId = initGame("1", "2")
-    /*
     runMoves(gameId, Seq(
       Move("1", 0, 0),
       Move("2", 1, 0),
@@ -73,7 +73,8 @@ class NoughtsTest extends JUnitSuite with Matchers {
       Move("2", 1, 1),
       Move("1", 0, 2)))
 
-    getState(gameId) should be (GameState(Some("1"), true))
-    */
+    val state: GameState = new GameState("1", true)
+    getState(gameId).getWinnerId shouldBe state.getWinnerId
+    getState(gameId).getGameOver shouldBe state.getGameOver
 	}
 }

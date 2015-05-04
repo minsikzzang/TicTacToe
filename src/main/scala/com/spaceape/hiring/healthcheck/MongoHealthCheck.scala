@@ -1,4 +1,4 @@
-package com.spaceape.hiring
+package com.spaceape.hiring.healthcheck
 
 import com.codahale.metrics.health.HealthCheck
 import com.codahale.metrics.health.HealthCheck.Result
