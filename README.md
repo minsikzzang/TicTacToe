@@ -84,3 +84,51 @@ Candidate Comments
 ------------------
 
 Please add any assumptions or commentary on your implementation decisions here.
+
+### Get Started ###
+
+Before start, we need to install and run Mongodb locally
+
+    $ brew install mongodb
+    $ mkdir /data/db
+    $ mongod
+
+### Run test ###
+
+Before running test, we need to wipe out test collections
+
+    $ mongo
+    > use tic_tac_toe
+    > db.leaderBoard.remove("")
+    > db.games.remove("")
+    > exit
+    $ mvn test
+
+### Why mongodb? ###
+
+ I've chosen mongodb as data storage for TicTacToe game server over relational database such as mysql / postgresql,
+ because mongodb stores data record as json object which gives more flexibility, very mature express query language, 
+ and scalability. And we don't need complex relational queries in TicTacToe game, so document database is the best fit 
+ for the case. 
+ 
+### Why not use pure key/value store such as canssandra / hbase? ###
+
+ Of course, they will be outperformed than mongodb. I was thinking to choose one of those key/value store as data 
+ storage but we need to de-normalise data structure and more time will be spent on development / maintenance. Unless the 
+ application requires super-high performance, I prefer easy development / maintenance with scalable solution than
+ super high performance / complex development / maintenance.
+  
+### Error response ###
+
+ Error response has json body which contains proper error code / message like below
+ 
+    {"error": {"code": 100, "message": "Hello Spaceape, Something goes bad O_o!!!"}}
+    
+### Assumption ###
+
+ Java mongodb driver takes care of db connection pooling. Default is set to 10
+ 
+
+
+ 
+    

@@ -1,6 +1,6 @@
 package com.spaceape.hiring.model
 
-import com.fasterxml.jackson.annotation.{JsonProperty, JsonCreator}
+import com.fasterxml.jackson.annotation.JsonProperty
 
 import com.mongodb.DB
 import com.spaceape.hiring.exception._
@@ -38,7 +38,12 @@ class Game (@BeanProperty @JsonProperty("player1Id") val player1Id: String,
 
     makeMove(move, scores)
     switchTurn
+    updateGameStateIfGameOver(scores, state, player1Id, player2Id)
 
+    Game.updateById(id, this)
+  }
+
+  def updateGameStateIfGameOver(scores: Array[Int], state: GameState, player1Id: String, player2Id: String) {
     val winner: Int = hasWinner(scores)
     if (winner != 0) {
       state.setWinnerId(getWinnerId(winner, player1Id, player2Id))
@@ -50,8 +55,6 @@ class Game (@BeanProperty @JsonProperty("player1Id") val player1Id: String,
       LeaderBoard.findAndModifyOrCreate(player2Id, 0)
       state.setGameOver(true)
     }
-
-    Game.updateById(id, this)
   }
 
   def getWinnerId(winner: Int, player1: String, player2: String): String = {
