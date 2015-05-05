@@ -25,6 +25,7 @@ class Game (@BeanProperty @JsonProperty("player1Id") val player1Id: String,
   @ObjectId @Id var id: String = null
   @BeanProperty @JsonProperty("turn") var turn: String = player1Id
   @ObjectId @Id def getId: String = id
+  val GRID_N = 3
 
   def addMove(move: Move) {
     if (state.getGameOver) {
@@ -66,8 +67,8 @@ class Game (@BeanProperty @JsonProperty("player1Id") val player1Id: String,
 
   def hasWinner(scores: Array[Int]): Int = {
     var result: Int = 0
-    if (scores.indexOf(3) >= 0 || scores.indexOf(-3) >= 0) {
-      result = if (scores.indexOf(3) >= 0) 1 else -1
+    if (scores.indexOf(GRID_N) >= 0 || scores.indexOf(-1 * GRID_N) >= 0) {
+      result = if (scores.indexOf(GRID_N) >= 0) 1 else -1
     }
     result
   }
@@ -77,16 +78,16 @@ class Game (@BeanProperty @JsonProperty("player1Id") val player1Id: String,
   }
 
   def makeMove(move: Move, scores: Array[Int]) {
-    if (points(move.x * 3 + move.y) != 0) {
+    if (points(move.x * GRID_N + move.y) != 0) {
       throw new DuplicatedMoveException(move)
     }
-    points(move.x * 3 + move.y) = 1
+    points(move.x * GRID_N + move.y) = 1
 
     val point: Int = { if (turn.compareTo(player1Id) == 0) 1 else -1 }
     scores(move.x) += point
-    scores(move.y + 3) += point
-    if (move.x == move.y) scores(2 * 3) += point
-    if (3 - 1 - move.y == move.x) scores(2 * 3 + 1) += point
+    scores(move.y + GRID_N) += point
+    if (move.x == move.y) scores(2 * GRID_N) += point
+    if (GRID_N - 1 - move.y == move.x) scores(2 * GRID_N + 1) += point
   }
 
   def switchTurn {
@@ -112,7 +113,7 @@ object Game {
   def create(player1Id: String, player2Id: String): WriteResult[Game, String] = {
     val joinedGames = Game.findLiveGameByPlayer1IdOr2Id(player1Id).orNull
     if (joinedGames != null && joinedGames.count() > 0) {
-      throw new PlayerInLiveGameException(player1Id, player2Id)
+      throw new UnfinishedGameException(player1Id, player2Id)
     }
 
     coll.save(new Game(player1Id, player2Id))

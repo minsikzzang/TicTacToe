@@ -59,8 +59,56 @@ class NoughtsTest extends JUnitSuite with Matchers {
       throw new RuntimeException(s"${response.getStatus} when getting state: ${response.getBody}")
     }
 
-    println(response.getBody)
     objectMapper.readValue(response.getBody, classOf[GameState])
+  }
+
+  @Test
+  def testCreatAGameWhenUnfinishedGameExists {
+    val player1: String = "10"
+    val player2: String = "11"
+    val gameId = initGame(player1, player2)
+
+    val response = Unirest.post(baseUrl)
+      .queryString("player1Id", player1)
+      .queryString("player2Id", player2)
+      .asString()
+
+    response.getStatus shouldBe 422
+    response.getBody shouldBe "{\"error\": {\"code\": 100, \"message\": \"Player(" + player1 +
+      " or " + player2 + ") has unfinished games\"}}"
+  }
+
+  @Test
+  def testOutOfTurn = {
+    val player1: String = "12"
+    val player2: String = "13"
+    val gameId = initGame(player1, player2)
+    runMoves(gameId, Seq(Move(player1, 0, 0)))
+
+    val response = Unirest.put(s"$baseUrl/$gameId")
+      .header("Content-Type", "application/json")
+      .body(objectMapper.writeValueAsString(Move(player1, 0, 1)))
+      .asString()
+
+    response.getStatus shouldBe 422
+    response.getBody shouldBe "{\"error\": {\"code\": 101, \"message\": \"It's not Player(" + player1 +
+      ")'s turn yet\"}}"
+  }
+
+  @Test
+  def testDuplicateMove = {
+    val player1: String = "14"
+    val player2: String = "15"
+    val gameId = initGame(player1, player2)
+    runMoves(gameId, Seq(Move(player1, 0, 0)))
+
+    val response = Unirest.put(s"$baseUrl/$gameId")
+      .header("Content-Type", "application/json")
+      .body(objectMapper.writeValueAsString(Move(player2, 0, 0)))
+      .asString()
+
+    response.getStatus shouldBe 422
+    response.getBody shouldBe "{\"error\": {\"code\": 103, \"message\": \"Position(0, 0) has already taken\"}}"
   }
 
 	@Test

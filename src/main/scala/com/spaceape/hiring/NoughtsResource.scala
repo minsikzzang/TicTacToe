@@ -16,6 +16,7 @@ import net.vz.mongodb.jackson.WriteResult
 class NoughtsResource(db: DB) {
   Game.db = db
   LeaderBoard.db = db
+  val TOP_LEADERBOARD_COUNT = 10
 
   @POST
   def createGame(@QueryParam("player1Id") player1: String, @QueryParam("player2Id") player2: String): String = {
@@ -23,8 +24,8 @@ class NoughtsResource(db: DB) {
       val result: WriteResult[Game, String] = Game.create(player1, player2)
       result.getSavedId
     } catch {
-      case inGameException: PlayerInLiveGameException =>
-        "{\"error\": {\"code\": " + inGameException.getCode + ", \"message\": \"" + inGameException.getMessage + "\"}}"
+      case inGameException: UnfinishedGameException =>
+        throw new WebApplicationException(Response.status(422).entity(inGameException.toJsonString).build)
     }
   }
 
@@ -46,8 +47,6 @@ class NoughtsResource(db: DB) {
   @PUT
   @Path("/{gameId}")
   def makeMove(@PathParam("gameId") gameId: String, move: Move): Response = {
-    println(move.playerId + ", " + move.x + ", "  + move.y)
-
     try {
       val game = Game.findById(gameId).orNull
       if (game == null) {
@@ -58,24 +57,17 @@ class NoughtsResource(db: DB) {
       Response.status(Status.ACCEPTED).build
     } catch {
       case argumentException: IllegalArgumentException => throw new WebApplicationException(Status.NOT_FOUND)
-      case e: InvalidPlayerTurnException =>
-        Response.status(422)
-          .entity("{\"error\": {\"code\": " + e.getCode + ", \"message\": \"" + e.getMessage + "\"}}")
-          .build
-      case e: GameHasFinishedException =>
-        Response.status(422)
-          .entity("{\"error\": {\"code\": " + e.getCode + ", \"message\": \"" + e.getMessage + "\"}}")
-          .build
-      case e: DuplicatedMoveException =>
-        Response.status(422)
-          .entity("{\"error\": {\"code\": " + e.getCode + ", \"message\": \"" + e.getMessage + "\"}}")
-          .build
+      case turnException: InvalidPlayerTurnException => Response.status(422).entity(turnException.toJsonString).build
+      case finishedException: GameHasFinishedException =>
+        Response.status(422).entity(finishedException.toJsonString).build
+      case duplicateException: DuplicatedMoveException =>
+        Response.status(422).entity(duplicateException.toJsonString).build
     }
   }
 
   @GET
   @Path("/leaderboard")
   def leaderBoard(): List[LeaderBoard] = {
-    LeaderBoard.findAllTop(10)
+    LeaderBoard.findAllTop(TOP_LEADERBOARD_COUNT)
   }
 }
