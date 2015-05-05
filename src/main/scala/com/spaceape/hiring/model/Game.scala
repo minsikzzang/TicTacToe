@@ -42,19 +42,16 @@ class Game (@BeanProperty @JsonProperty("player1Id") val player1Id: String,
     val winner: Int = hasWinner(scores)
     if (winner != 0) {
       state.setWinnerId(getWinnerId(winner, player1Id, player2Id))
-      updateLeaderboard(state.getWinnerId, getLoserId(winner, player1Id, player2Id))
-    }
-
-    if (hasDrawn(points) || winner != 0) {
+      LeaderBoard.findAndModifyOrCreate(state.getWinnerId, 1)
+      LeaderBoard.findAndModifyOrCreate(getLoserId(winner, player1Id, player2Id), -1)
+      state.setGameOver(true)
+    } else if (hasDrawn(points)) {
+      LeaderBoard.findAndModifyOrCreate(player1Id, 0)
+      LeaderBoard.findAndModifyOrCreate(player2Id, 0)
       state.setGameOver(true)
     }
 
     Game.updateById(id, this)
-  }
-
-  def updateLeaderboard(winnerId: String, loserId: String) {
-    LeaderBoard.findAndModifyOrCreate(winnerId, 1)
-    LeaderBoard.findAndModifyOrCreate(loserId, -1)
   }
 
   def getWinnerId(winner: Int, player1: String, player2: String): String = {

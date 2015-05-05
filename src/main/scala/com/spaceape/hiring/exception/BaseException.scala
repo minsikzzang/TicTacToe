@@ -1,7 +1,7 @@
 package com.spaceape.hiring.exception
 
 class BaseException(val msg: String) extends Exception(msg) {
-  def toJsonString: String = {
+  def toJson: String = {
     "{\"error\": {\"code\": " + this.getCode + ", \"message\": \"" + this.getMessage + "\"}}"
   }
 

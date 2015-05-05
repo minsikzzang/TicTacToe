@@ -1,7 +1,7 @@
 package com.spaceape.hiring.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.mongodb.{BasicDBObject, DBObject, DBCursor, DB}
+import com.mongodb.{BasicDBObject, DB}
 import net.vz.mongodb.jackson._
 import scala.collection.JavaConversions._
 

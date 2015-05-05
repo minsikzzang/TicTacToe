@@ -16,6 +16,7 @@ import net.vz.mongodb.jackson.WriteResult
 class NoughtsResource(db: DB) {
   Game.db = db
   LeaderBoard.db = db
+  
   val TOP_LEADERBOARD_COUNT = 10
 
   @POST
@@ -25,23 +26,19 @@ class NoughtsResource(db: DB) {
       result.getSavedId
     } catch {
       case inGameException: UnfinishedGameException =>
-        throw new WebApplicationException(Response.status(422).entity(inGameException.toJsonString).build)
+        throw new WebApplicationException(Response.status(422).entity(inGameException.toJson).build)
     }
   }
 
   @GET
   @Path("/{gameId}")
   def getGame(@PathParam("gameId") gameId: String): GameState = {
-    try {
-      val game = Game.findById(gameId).orNull
-      if (game == null) {
-        throw new WebApplicationException(Status.NOT_FOUND)
-      }
-
-      game.getState
-    } catch {
-      case argumentException: IllegalArgumentException => throw new WebApplicationException(Status.NOT_FOUND)
+    val game = Game.findById(gameId).orNull
+    if (game == null) {
+      throw new WebApplicationException(Status.NOT_FOUND)
     }
+
+    game.getState
   }
 
   @PUT
@@ -56,12 +53,9 @@ class NoughtsResource(db: DB) {
       game.addMove(move)
       Response.status(Status.ACCEPTED).build
     } catch {
-      case argumentException: IllegalArgumentException => throw new WebApplicationException(Status.NOT_FOUND)
-      case turnException: InvalidPlayerTurnException => Response.status(422).entity(turnException.toJsonString).build
-      case finishedException: GameHasFinishedException =>
-        Response.status(422).entity(finishedException.toJsonString).build
-      case duplicateException: DuplicatedMoveException =>
-        Response.status(422).entity(duplicateException.toJsonString).build
+      case turnException: InvalidPlayerTurnException => Response.status(422).entity(turnException.toJson).build
+      case finishedException: GameHasFinishedException => Response.status(422).entity(finishedException.toJson).build
+      case duplicateException: DuplicatedMoveException => Response.status(422).entity(duplicateException.toJson).build
     }
   }
 
